@@ -1,0 +1,32 @@
+﻿{
+    "extends": "../tsconfig-base",
+    "compilerOptions": {
+        "removeComments": false,
+        "outDir": "../../built/harness/",
+        "module": "commonjs",
+        "declaration": false,
+        "types": [
+            "node", "mocha", "chai"
+        ],
+        "lib": [
+            "es6",
+            "scripthost"
+        ],
+        "strict": true
+    },
+    "files": [
+        "utils.ts",
+        "vpath.ts",
+        "vfs.ts",
+        "io.ts",
+        "documents.ts",
+        "testCaseParser.ts",
+        "textWriter.ts",
+        "formatters.ts",
+        "baselines.ts",
+        "compiler.ts",
+        "runner.ts",
+        "runners/compiler.ts",
+        "run.ts"
+    ]
+}

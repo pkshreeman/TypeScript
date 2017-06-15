@@ -20,6 +20,7 @@ var docDirectory = "doc/";
 
 var builtDirectory = "built/";
 var builtLocalDirectory = "built/local/";
+var builtHarnessDirectory = "built/harness/";
 var LKGDirectory = "lib/";
 
 var copyright = "CopyrightNotice.txt";
@@ -87,6 +88,7 @@ var typingsInstallerSources = filesFromConfig(path.join(serverDirectory, "typing
 var watchGuardSources = filesFromConfig(path.join(serverDirectory, "watchGuard/tsconfig.json"));
 var serverSources = filesFromConfig(path.join(serverDirectory, "tsconfig.json"))
 var languageServiceLibrarySources = filesFromConfig(path.join(serverDirectory, "tsconfig.library.json"));
+var harness2Sources = filesFromConfig("./src/harness2/tsconfig.json");
 
 var harnessCoreSources = [
     "harness.ts",
@@ -276,6 +278,7 @@ var builtLocalCompiler = path.join(builtLocalDirectory, compilerFilename);
     * @param {boolean} opts.stripInternal: true if compiler should remove declarations marked as @internal
     * @param {boolean} opts.inlineSourceMap: true if compiler should inline sourceMap
     * @param {Array} opts.types: array of types to include in compilation
+    * @param {boolean} opts.strict: true to compile using --strict
     * @param callback: a function to execute after the compilation process ends
     */
 function compileFile(outFile, sources, prereqs, prefixes, useBuiltCompiler, opts, callback) {
@@ -341,6 +344,9 @@ function compileFile(outFile, sources, prereqs, prefixes, useBuiltCompiler, opts
         }
         else {
             options += " --lib es5"
+        }
+        if (opts.strict) {
+            options += " --strict";
         }
         options += " --noUnusedLocals --noUnusedParameters";
 
@@ -715,6 +721,7 @@ task("LKG", ["clean", "release", "local"].concat(libraryTargets), function () {
 
 // Test directory
 directory(builtLocalDirectory);
+directory(builtHarnessDirectory);
 
 // Task to build the tests infrastructure using the built compiler
 var run = path.join(builtLocalDirectory, "run.js");
@@ -726,6 +733,15 @@ compileFile(
     /*useBuiltCompiler:*/ true,
     /*opts*/ { inlineSourceMap: true, types: ["node", "mocha", "chai"], lib: "es6" });
 
+var run2 = path.join(builtHarnessDirectory, "run.js");
+compileFile(
+    /*outFile*/ run2,
+    /*source*/ harness2Sources,
+    /*prereqs*/[builtHarnessDirectory].concat(harness2Sources),
+    /*prefixes*/[],
+    /*useBuiltCompiler:*/ false,
+    /*opts*/ { inlineSourceMap: true, types: ["node", "mocha", "chai"], lib: "es6", noOutFile: true, outDir: builtHarnessDirectory, strict: true });
+
 var internalTests = "internal/";
 
 var localBaseline = "tests/baselines/local/";
@@ -736,6 +752,9 @@ var refRwcBaseline = path.join(internalTests, "baselines/rwc/reference");
 
 var localTest262Baseline = path.join(internalTests, "baselines/test262/local");
 var refTest262Baseline = path.join(internalTests, "baselines/test262/reference");
+
+desc("Builds the test harness");
+task("harness", [run2]);
 
 desc("Builds the test infrastructure using the built compiler");
 task("tests", ["local", run].concat(libraryTargets));

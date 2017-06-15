@@ -93,6 +93,7 @@ const docDirectory = "doc/";
 
 const builtDirectory = "built/";
 const builtLocalDirectory = "built/local/";
+const builtHarnessDirectory = "built/harness/";
 const LKGDirectory = "lib/";
 
 const copyright = "CopyrightNotice.txt";
@@ -564,6 +565,23 @@ gulp.task(run, /*help*/ false, [servicesFile], () => {
         .pipe(sourcemaps.write(".", { includeContent: false, sourceRoot: "../../" }))
         .pipe(gulp.dest("src/harness"));
 });
+
+const run2 = path.join(builtHarnessDirectory, "run.js");
+gulp.task(run2, /*help*/ false, [], () => {
+    const harnessProject = tsc.createProject("src/harness2/tsconfig.json", getCompilerSettings({
+        types: ["node", "mocha", "chai"],
+        lib: ["es6"],
+        strict: true
+    }, /*useBuiltCompiler*/ false));
+    return harnessProject.src()
+        .pipe(newer(builtHarnessDirectory))
+        .pipe(sourcemaps.init())
+        .pipe(harnessProject())
+        .pipe(sourcemaps.write(".", <any>{ includeContent: false, destPath: builtHarnessDirectory }))
+        .pipe(gulp.dest(builtHarnessDirectory));
+});
+
+gulp.task("harness", "Builds the test harness", [run2]);
 
 const internalTests = "internal/";
 
