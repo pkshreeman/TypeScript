@@ -1521,18 +1521,15 @@ namespace ts {
         }
     }
 
-    export function getJSDocParameterTags(param: ParameterDeclaration): JSDocParameterTag[] {
+    export function getJSDocParameterTags(param: ParameterDeclaration): JSDocParameterTag[] | undefined {
         const func = param.parent;
-        const tags = getJSDocTags(func, SyntaxKind.JSDocParameterTag) as JSDocParameterTag[];
-        if (!param.name) {
-            // this is an anonymous jsdoc param from a `function(type1, type2): type3` specification
-            const i = func.parameters.indexOf(param);
-            const paramTags = filter(tags, tag => tag.kind === SyntaxKind.JSDocParameterTag);
-            if (paramTags && 0 <= i && i < paramTags.length) {
-                return [paramTags[i]];
-            }
+        if (func.kind === SyntaxKind.JSDocFunctionType) {
+            // JSDocFunctionType can't have @param comments
+            return undefined;
         }
-        else if (param.name.kind === SyntaxKind.Identifier) {
+
+        const tags = getJSDocTags(func, SyntaxKind.JSDocParameterTag) as JSDocParameterTag[];
+        if (param.name.kind === SyntaxKind.Identifier) {
             const name = (param.name as Identifier).text;
             return filter(tags, tag => tag.kind === SyntaxKind.JSDocParameterTag && tag.name.text === name);
         }
